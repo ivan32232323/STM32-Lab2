@@ -69,7 +69,7 @@ p('Образ stm32-build на базі ubuntu:22.04 з arm-none-eabi-gcc. Зб�
   'і не залежить від налаштувань системи. На Windows без make можна запустити build.bat.')
 code('make image   # docker build -t stm32-build docker/\nmake build   # docker run ... stm32-build make -C firmware all')
 code('LD  build/firmware.elf\n   text    data     bss     dec     hex filename\n  25612     112    2320   28044    6d8c build/firmware.elf')
-p(f'Коміт: {C("429a85b")}')
+p(f'Коміт: {C("41839b3")}')
 
 h2('3.3. STM32CubeMX')
 tbl([['Периферія', 'Параметри', 'Виводи'],
@@ -84,7 +84,7 @@ p('Pinout:')
 img('docs/screenshots/cubemx-pinout.png', 16.0, '')
 p('Clock Configuration:')
 img('docs/screenshots/cubemx-clock.png', 16.0, '')
-p(f'Коміт: {C("436cd39")}')
+p(f'Коміт: {C("9efc7ab")}')
 
 h2('3.4. Перший запуск у Wokwi')
 p('printf перенаправлено в USART2 через функцію _write(). Налаштовано wokwi.toml і diagram.json. '
@@ -95,7 +95,7 @@ code('=== hello from STM32 ===\nLR1 bring-up | MCU STM32C031C6 | SYSCLK = 480000
      'I2C1 scan: 0x68  (1 device(s))\n'
      'MPU-6050 WHO_AM_I (0x75) = 0x68  [soft-I2C] -> identified\n'
      'tick 1 | mode=MANUAL pot=0 pitch=0 roll=0 pwm1=1000 pwm2=1500\ntick 2 | ...')
-p(f'Коміт: {C("118b3d7")}')
+p(f'Коміт: {C("63b031d")}')
 
 h2('3.5. Компоненти і datasheets')
 p('У docs/hardware-components.md для кожного компонента вказано інтерфейс, адресу, ключові регістри '
@@ -108,7 +108,7 @@ img('docs/datasheets/mpu6050-ps-p15-i2c-addr.png', 13.5,
     '2. InvenSense. MPU-6000/MPU-6050 Product Specification, PS-MPU-6000A-00, rev 3.4, 19.08.2013.')
 img('docs/datasheets/mpu6050-ps-p14-current.png', 13.5, '')
 img('docs/datasheets/mpu6050-ps-p35-i2c-protocol.png', 13.5, '')
-p(f'Коміт: {C("66d72e3")}')
+p(f'Коміт: {C("aa6f906")}')
 
 h2('3.6. Сенсори і перевірка шин')
 p('До diagram.json додано MPU-6050, потенціометр, два серво SG90, кнопку і логічний аналізатор. '
@@ -119,26 +119,26 @@ p('Декодована транзакція WHO_AM_I (запис з логіч�
 img('docs/screenshots/logic-i2c-whoami.png', 16.5, '')
 p('PWM на виводі серво:')
 img('docs/screenshots/logic-pwm.png', 16.5, '')
-p(f'Коміт: {C("86c7d85")}')
+p(f'Коміт: {C("340da7b")}')
 
 h2('3.7. Проблеми та їх вирішення')
 PROBS = [
  ('у Wokwi немає Nucleo-F411RE / F446RE',
   'у списку плат Wokwi є тільки Nucleo-C031C6 і Nucleo-L031K6.',
-  'взяв Nucleo-C031C6, підключив HAL для STM32C0 і змінив у Makefile -mcpu на cortex-m0plus.', '436cd39'),
+  'взяв Nucleo-C031C6, підключив HAL для STM32C0 і змінив у Makefile -mcpu на cortex-m0plus.', '9efc7ab'),
  ('збірка падає на m-profile/cmsis_gcc_m.h: No such file or directory',
   'make build -> fatal error у cmsis_gcc.h.',
-  'заголовки CMSIS були з іншої версії. Взяв папку CMSIS/Include з того ж пакета, що й HAL.', '436cd39'),
+  'заголовки CMSIS були з іншої версії. Взяв папку CMSIS/Include з того ж пакета, що й HAL.', '9efc7ab'),
  ('implicit declaration of function HAL_TIM_MspPostInit',
   'попередження при збірці в MX_TIM3_Init().',
-  'додав прототип функції в main.h.', '118b3d7'),
+  'додав прототип функції в main.h.', '63b031d'),
  ('make build не працює на Windows',
   'у PowerShell немає make, а $(id -u) у Makefile не спрацьовує.',
-  'для Windows прибрав --user у Makefile і додав build.bat.', '429a85b'),
+  'для Windows прибрав --user у Makefile і додав build.bat.', '41839b3'),
  ('MPU-6050 — WHO_AM_I = 0x00',
   'I²C-скан бачить 0x68, але HAL_I2C_Mem_Read повертає HAL_ERROR (err = 0x20, timeout). Master_Transmit + Master_Receive дають те саме.',
   'у логічному аналізаторі видно, що після адреси читання 0xD1 немає тактів SCL. Зробив читання програмним I²C на тих самих пінах, '
-  'SDA під час читання перемикаю на вхід. Після цього WHO_AM_I = 0x68.', '86c7d85'),
+  'SDA під час читання перемикаю на вхід. Після цього WHO_AM_I = 0x68.', '340da7b'),
 ]
 for i, (t, s, f, sha) in enumerate(PROBS, 1):
     B.append(('prob', i, t, s, f, sha))
@@ -269,5 +269,7 @@ for b in B:
         doc.add_paragraph(f'Симптом: {s}'); doc.add_paragraph(f'Фікс: {f}'); doc.add_paragraph(f'Коміт: {C(sha)}')
 
 open('docs/report.md', 'w', encoding='utf-8').write(md())
+doc.core_properties.author = STUDENT
+doc.core_properties.last_modified_by = STUDENT
 doc.save('docs/report.docx')
 print('ok')

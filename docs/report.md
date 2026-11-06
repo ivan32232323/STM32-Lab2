@@ -70,7 +70,7 @@ LD  build/firmware.elf
   25612     112    2320   28044    6d8c build/firmware.elf
 ```
 
-Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/429a85b
+Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/41839b3
 
 ## 3.3. STM32CubeMX
 
@@ -92,7 +92,7 @@ Clock Configuration:
 
 ![](screenshots/cubemx-clock.png)
 
-Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/436cd39
+Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/9efc7ab
 
 ## 3.4. Перший запуск у Wokwi
 
@@ -111,7 +111,7 @@ tick 1 | mode=MANUAL pot=0 pitch=0 roll=0 pwm1=1000 pwm2=1500
 tick 2 | ...
 ```
 
-Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/118b3d7
+Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/63b031d
 
 ## 3.5. Компоненти і datasheets
 
@@ -133,7 +133,7 @@ tick 2 | ...
 
 ![](datasheets/mpu6050-ps-p35-i2c-protocol.png)
 
-Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/66d72e3
+Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/aa6f906
 
 ## 3.6. Сенсори і перевірка шин
 
@@ -151,34 +151,34 @@ PWM на виводі серво:
 
 ![](screenshots/logic-pwm.png)
 
-Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/86c7d85
+Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/340da7b
 
 ## 3.7. Проблеми та їх вирішення
 
 Проблема 1: у Wokwi немає Nucleo-F411RE / F446RE  
 Симптом: у списку плат Wokwi є тільки Nucleo-C031C6 і Nucleo-L031K6.  
 Фікс: взяв Nucleo-C031C6, підключив HAL для STM32C0 і змінив у Makefile -mcpu на cortex-m0plus.  
-Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/436cd39
+Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/9efc7ab
 
 Проблема 2: збірка падає на m-profile/cmsis_gcc_m.h: No such file or directory  
 Симптом: make build -> fatal error у cmsis_gcc.h.  
 Фікс: заголовки CMSIS були з іншої версії. Взяв папку CMSIS/Include з того ж пакета, що й HAL.  
-Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/436cd39
+Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/9efc7ab
 
 Проблема 3: implicit declaration of function HAL_TIM_MspPostInit  
 Симптом: попередження при збірці в MX_TIM3_Init().  
 Фікс: додав прототип функції в main.h.  
-Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/118b3d7
+Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/63b031d
 
 Проблема 4: make build не працює на Windows  
 Симптом: у PowerShell немає make, а $(id -u) у Makefile не спрацьовує.  
 Фікс: для Windows прибрав --user у Makefile і додав build.bat.  
-Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/429a85b
+Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/41839b3
 
 Проблема 5: MPU-6050 — WHO_AM_I = 0x00  
 Симптом: I²C-скан бачить 0x68, але HAL_I2C_Mem_Read повертає HAL_ERROR (err = 0x20, timeout). Master_Transmit + Master_Receive дають те саме.  
 Фікс: у логічному аналізаторі видно, що після адреси читання 0xD1 немає тактів SCL. Зробив читання програмним I²C на тих самих пінах, SDA під час читання перемикаю на вхід. Після цього WHO_AM_I = 0x68.  
-Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/86c7d85
+Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/340da7b
 
 # 4. Висновок
 
