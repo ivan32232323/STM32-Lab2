@@ -79,18 +79,18 @@ TIM3_CH1/CH2 PA6/PA7 → серво pan/tilt (50 Гц, 1–2 мс), PA10 → к�
 | 1 | CubeMX → Pinout: PA0 ADC1_IN0, PA2/PA3 USART2, PA5 LED, PA6/PA7 TIM3_CH1/CH2, PA10 GPIO_Input, PB8/PB9 I2C1 | `screenshots/cubemx-pinout.png` |
 | 2 | CubeMX → Clock Configuration: HSI48, HSIDIV /1, SYSCLK = HCLK = PCLK = 48 МГц | `screenshots/cubemx-clock.png` |
 | 3 | Wokwi — схема зі з'єднаннями | `screenshots/wokwi-diagram.png` |
-| 4 | Wokwi Serial Monitor — звіт `[ OK ]`, I²C-scan `0x68`, `tick 1, 2, 3 …` | `screenshots/wokwi-uart.png` |
-| 5 | Logic analyzer — SCL/SDA під час `HAL_I2C_IsDeviceReady()` і PWM 50 Гц на D12 | `screenshots/logic-i2c-pwm.png` |
+| 4 | Wokwi — симуляція в режимі MIRROR (серво повернуті) і лог `tick` у Serial Monitor | `screenshots/wokwi-uart.jpg` |
+| 5 | Logic analyzer (`wokwi.vcd` → графік) — транзакція I²C WHO_AM_I і PWM 50 Гц на D12 | `screenshots/logic-i2c-pwm.png` |
 | 6 | `make build` у терміналі — розмір `.elf` | `screenshots/make-build.png` |
 
 ![CubeMX Pinout](screenshots/cubemx-pinout.png)
 ![CubeMX Clock](screenshots/cubemx-clock.png)
 ![Wokwi diagram](screenshots/wokwi-diagram.png)
-![Wokwi UART](screenshots/wokwi-uart.png)
+![Wokwi UART](screenshots/wokwi-uart.jpg)
 ![Logic analyzer](screenshots/logic-i2c-pwm.png)
 ![make build](screenshots/make-build.png)
 
-## 3.4. Очікуваний вивід UART
+## 3.4. Фактичний вивід UART (Wokwi Serial Monitor)
 
 ```
 === hello from STM32 ===
@@ -102,14 +102,19 @@ LR1 bring-up | MCU STM32C031C6 | SYSCLK = 48000000 Hz
 [ OK ] HAL_TIM_PWM_Start CH1  -> HAL_OK
 [ OK ] HAL_TIM_PWM_Start CH2  -> HAL_OK
 I2C1 scan: 0x68  (1 device(s))
-MPU-6050 WHO_AM_I (0x75) = 0x68  -> identified
-Button on PA10: switch MANUAL (pot) / MIRROR (IMU)
-
-tick 1 | mode=MANUAL pot=2047 pitch=0 roll=0 pwm1=1499 pwm2=1500
-tick 2 | mode=MANUAL pot=2047 pitch=0 roll=0 pwm1=1499 pwm2=1500
+HW I2C1 read: st=1 err=0x20 id=0x00 -> fallback to bit-bang I2C
+soft-I2C read: st=0 id=0x68
+MPU-6050 WHO_AM_I (0x75) = 0x68  [soft-I2C] -> identified
+...
+tick 42 | mode=MANUAL pot=0 pitch=0 roll=0 pwm1=1000 pwm2=1500
 button pressed -> mode MIRROR
-tick 3 | mode=MIRROR pot=2047 pitch=0 roll=0 pwm1=1500 pwm2=1500
+tick 43 | mode=MIRROR pot=0 pitch=0 roll=0 pwm1=1500 pwm2=1500
+tick 66 | mode=MIRROR pot=0 pitch=0 roll=55 pwm1=1805 pwm2=1500     <- accel Y = 1.45 g
+tick 84 | mode=MIRROR pot=0 pitch=31 roll=55 pwm1=1805 pwm2=1672    <- accel X < 0
 ```
+
+Перевірка розрахунку: roll = atan2(1.45, 1.0) = 55.4°, а 1500 + 55·500/90 = 1805 мкс, що збігається з виводом.
+Logic analyzer (`wokwi.vcd`) показує на D12 імпульси шириною рівно 1000, 1500 і 1805 мкс з періодом 20 мс.
 
 ## 3.5. Проблеми та їх вирішення
 
@@ -157,6 +162,18 @@ Docker-образ гарантує ту саму версію GCC на будь-
 **Рішення.** `-specs=nano.specs` (newlib-nano), `--gc-sections`, кути виводяться цілими числами.
 Підсумок — 24.5 КБ. Для ЛР2 (Mahony-фільтр) розглянути фіксовану кому або перехід на F446RE з FPU.
 Коміт: `118b3d7`.
+
+### Проблема 7: `HAL_I2C_Mem_Read` до MPU-6050 у Wokwi повертає `HAL_TIMEOUT`
+**Симптом.** I²C-scan знаходить 0x68, але `WHO_AM_I` = 0x00. `HAL_I2C_Mem_Read` повертає `HAL_ERROR`,
+`HAL_I2C_GetError()` = `0x20` (`HAL_I2C_ERROR_TIMEOUT`). Те саме дають роздільні `Master_Transmit` + `Master_Receive`.
+**Причина.** Я розібрав `wokwi.vcd` (Logic Analyzer на D14/D15) Python-скриптом. Фаза запису (`0xD0 ACK, 0x75 ACK`)
+проходить, але після адреси читання `0xD1 ACK` модель периферії I2C STM32C0 у Wokwi не генерує тактів SCL
+для байта даних. Отже, проблема в симуляторі (I2C C0 позначено як «Master mode only»), а не в прошивці чи схемі.
+**Рішення.** Апаратний I2C1 залишено для ініціалізації та сканування, як вимагає методичка. Якщо апаратне читання
+не вдається, прошивка переходить на програмний I²C (bit-bang) на тих самих пінах через `HAL_GPIO`. Перша
+спроба bit-bang теж дала 0x00, бо модель не повертає рівень лінії для open-drain виходу. Тому SDA на час
+читання перемикається у вхідний режим з pull-up. Після цього `WHO_AM_I = 0x68`. На реальній Nucleo
+fallback не вмикається. Коміт: `86c7d85`.
 
 # 4. Висновок
 
