@@ -80,14 +80,14 @@ TIM3_CH1/CH2 PA6/PA7 → серво pan/tilt (50 Гц, 1–2 мс), PA10 → к�
 | 2 | CubeMX → Clock Configuration: HSI48, HSIDIV /1, SYSCLK = HCLK = PCLK = 48 МГц | `screenshots/cubemx-clock.png` |
 | 3 | Wokwi — схема зі з'єднаннями | `screenshots/wokwi-diagram.png` |
 | 4 | Wokwi — симуляція в режимі MIRROR (серво повернуті) і лог `tick` у Serial Monitor | `screenshots/wokwi-uart.jpg` |
-| 5 | Logic analyzer (`wokwi.vcd` → графік) — транзакція I²C WHO_AM_I і PWM 50 Гц на D12 | `screenshots/logic-i2c-pwm.png` |
+| 5 | Logic analyzer (`wokwi.vcd` → графік) — транзакція I²C WHO_AM_I і PWM 50 Гц на D12 | `screenshots/logic-i2c-whoami.png` |
 | 6 | `make build` у терміналі — розмір `.elf` | `screenshots/make-build.png` |
 
 ![CubeMX Pinout](screenshots/cubemx-pinout.png)
 ![CubeMX Clock](screenshots/cubemx-clock.png)
 ![Wokwi diagram](screenshots/wokwi-diagram.png)
 ![Wokwi UART](screenshots/wokwi-uart.jpg)
-![Logic analyzer](screenshots/logic-i2c-pwm.png)
+![Logic analyzer](screenshots/logic-i2c-whoami.png)
 ![make build](screenshots/make-build.png)
 
 ## 3.4. Фактичний вивід UART (Wokwi Serial Monitor)

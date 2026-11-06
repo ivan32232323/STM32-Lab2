@@ -1,74 +1,86 @@
-# Побудова графіка з wokwi.vcd (Wokwi Logic Analyzer): python3 tools/vcd_plot.py wokwi.vcd out.png
-import sys, matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
-names={'!':'D0 SCL (PB8)','"':'D1 SDA (PB9)','#':'D2 PWM pan (PA6)','$':'D3 UART TX (PA2)'}
-ev={k:[] for k in names}; t=0
-for l in open(sys.argv[1]):
-    l=l.strip()
-    if l.startswith('#'): t=int(l[1:])
-    elif len(l)==2 and l[1] in names: ev[l[1]].append((t,int(l[0])))
-def series(k,t0,t1):
-    xs=[];ys=[];last=None
-    for tt,v in ev[k]:
-        if tt<t0: last=v; continue
-        if tt>t1: break
-        if last is not None: xs.append((tt-t0)/1e3); ys.append(last)
-        xs.append((tt-t0)/1e3); ys.append(v); last=v
-    if last is not None: xs.append((t1-t0)/1e3); ys.append(last)
-    return xs,ys
-# знайти soft-I2C WHO_AM_I: перший старт SDA після довгої паузи після сканування
-sda=[tt for tt,v in ev['"'] if v==0]
-scl=ev['!']
-# беремо останній блок активності SCL до ~1.6 с: шукаємо пакет з 0xD0 0x75
-t_i2c=None
-# простий підхід: знайти найбільшу паузу між фронтами SCL у перші 2 с і взяти наступний пакет
-edges=[tt for tt,v in scl if tt<3e9]
-gaps=[(edges[i+1]-edges[i],edges[i+1]) for i in range(len(edges)-1)]
-cands=sorted([g for g in gaps if g[0]>3e6],key=lambda x:x[1])
-# перший кадр програмного I2C (WHO_AM_I): SCL-імпульси 20 мкс..2 мс
-t_i2c=None
-for (a,va),(b,vb) in zip(scl,scl[1:]):
-    if va==1 and 20e3<b-a<2e6 and a>1.3e9: t_i2c=a; break
-fig,ax=plt.subplots(2,1,figsize=(13,6.5))
-# кінець кадру: наступна пауза SCL > 2 мс
-end=[e for e in edges if e>t_i2c]
-t1=t_i2c
-for a,b in zip(end,end[1:]):
-    t1=b
-    if b-a>2e6: t1=a; break
-t0=t_i2c-300e3; t1=t1+300e3
-t1=min(t1,t0+9e6)
-# декодування байтів кадру
-bits=[];sc=1;sd=1;frames=[];cur=[]
-allev=sorted([(tt,'!',v) for tt,v in scl]+[(tt,'"',v) for tt,v in ev['"']])
-for tt,k,v in allev:
-    if tt<t0 or tt>t1: 
-        if k=='!': sc=v
-        else: sd=v
-        continue
-    if k=='!':
-        if v==1: cur.append(sd)
-        sc=v
-    else:
-        if sc==1 and v==0: cur=[]; frames.append('S')
-        if sc==1 and v==1: frames.append(cur); frames.append('P'); cur=[]
-        sd=v
-dec=[]
-for f in frames:
-    if isinstance(f,list):
-        for i in range(0,len(f)-8,9): dec.append('0x%02X%s'%(int(''.join(map(str,f[i:i+8])),2),'' if f[i+8]==0 else '(NACK)'))
-print('decoded',frames[:3],dec)
-for i,k in enumerate(['!','"']):
-    x,y=series(k,t0,t1); ax[0].plot(x,[v*0.8+ (1-i)*1.2 for v in y],drawstyle='steps-post',lw=1.1)
-ax[0].set_yticks([1.6,0.4]); ax[0].set_yticklabels([names['!'],names['"']])
-ax[0].set_xlabel('мкс від початку вікна'); ax[0].set_title('I²C1 PB8/PB9 (програмний fallback): транзакція WHO_AM_I до MPU-6050 @0x68 — Wokwi Logic Analyzer')
-pw=[tt for tt,v in ev['#'] if v==1]
-p0=pw[len(pw)//2]-2e6; p1=p0+60e6
-x,y=series('#',p0,p1); ax[1].plot([v/1e3 for v in x],y,drawstyle='steps-post',color='tab:red')
-ax[1].set_yticks([0,1]); ax[1].set_xlabel('мс'); ax[1].set_title(names['#']+': PWM 50 Гц (період 20 мс, імпульс 1–2 мс)')
-for a in ax: a.grid(alpha=.3)
-plt.tight_layout(); plt.savefig(sys.argv[2],dpi=110)
-hi=[];lo=[]
-for i in range(len(ev['#'])-2):
-    (a,va),(b,vb),(c,vc)=ev['#'][i:i+3]
-    if va==1: hi.append(b-a); 
-print('t_i2c',t_i2c/1e6,'ms; PWM high widths (us):',sorted(set(round(h/1e3) for h in hi))[:10])
+# Побудова графіків з wokwi.vcd (Wokwi Logic Analyzer) + декодер I2C.
+# Використання: python3 tools/vcd_plot.py wokwi.vcd docs/screenshots
+import sys, os, matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
+vcd, outdir = sys.argv[1], sys.argv[2]
+ids = {'!': 'SCL', '"': 'SDA', '#': 'PWM', '$': 'TX'}
+ev = {k: [] for k in ids}; t = 0
+for l in open(vcd):
+    l = l.strip()
+    if l.startswith('#'): t = int(l[1:])
+    elif len(l) == 2 and l[1] in ids: ev[l[1]].append((t, int(l[0])))
+
+def level_at(sig, tt):
+    v = None
+    for a, b in ev[sig]:
+        if a > tt: break
+        v = b
+    return v
+
+def decode_i2c(t0, t1):
+    """Повертає список (t, label) — S/Sr/P і байти з ACK/NACK."""
+    allev = sorted([(a, 'C', v) for a, v in ev['!'] if t0 <= a <= t1] +
+                   [(a, 'D', v) for a, v in ev['"'] if t0 <= a <= t1], key=lambda x: (x[0], x[1] == 'D'))
+    scl = level_at('!', t0); sda = level_at('"', t0)
+    out = []; bits = []; started = False; tb = None
+    for a, k, v in allev:
+        if k == 'D':
+            if scl == 1 and sda == 1 and v == 0:
+                out.append((a, 'Sr' if started else 'S')); started = True; bits = []
+            elif scl == 1 and sda == 0 and v == 1:
+                out.append((a, 'P')); started = False; bits = []
+            sda = v
+        else:
+            if v == 1 and started:
+                if not bits: tb = a
+                bits.append(sda)
+                if len(bits) == 9:
+                    byte = int(''.join(map(str, bits[:8])), 2)
+                    out.append((tb, '0x%02X %s' % (byte, 'ACK' if bits[8] == 0 else 'NACK'))); bits = []
+            scl = v
+    return out
+
+def series(sig, t0, t1):
+    xs, ys = [], []; last = level_at(sig, t0)
+    xs.append(0); ys.append(last)
+    for a, v in ev[sig]:
+        if a < t0: continue
+        if a > t1: break
+        xs += [(a - t0) / 1e3] * 2; ys += [last, v]; last = v
+    xs.append((t1 - t0) / 1e3); ys.append(last)
+    return xs, ys
+
+# --- кадр WHO_AM_I: перший програмний кадр (SCL-імпульси 20 мкс..2 мс) після 1.3 с
+scl = ev['!']
+t_i2c = next(a for (a, va), (b, vb) in zip(scl, scl[1:]) if va == 1 and 20e3 < b - a < 2e6 and a > 1.3e9)
+t0 = t_i2c - 300e3; t1 = t0 + 9e6
+dec = decode_i2c(t0, t1)
+print('I2C decode:', ' | '.join(l for _, l in dec))
+fig, ax = plt.subplots(figsize=(14, 4.2))
+for i, (sig, name) in enumerate([('!', 'D0  SCL (PB8)'), ('"', 'D1  SDA (PB9)')]):
+    x, y = series(sig, t0, t1); base = 2.6 - i * 1.6
+    ax.plot(x, [base + v for v in y], drawstyle='default', lw=1.2, color=['#1f6feb', '#d97706'][i])
+    ax.text(-90, base + 0.4, name, ha='right', va='center', fontsize=10)
+colors = {'S': '#16a34a', 'Sr': '#16a34a', 'P': '#7c3aed'}
+for a, lab in dec:
+    x = (a - t0) / 1e3
+    c = colors.get(lab, '#0891b2' if 'ACK' in lab and 'NACK' not in lab else '#dc2626')
+    ax.annotate(lab, (x, -0.35), fontsize=9, color='white', ha='left', va='center',
+                bbox=dict(boxstyle='round,pad=0.25', fc=c, ec='none'))
+ax.set_xlim(-10, (t1 - t0) / 1e3); ax.set_ylim(-0.9, 3.9); ax.set_yticks([])
+ax.set_xlabel('мкс від початку вікна (t0 = %.3f мс симуляції)' % (t0 / 1e6))
+ax.set_title('I²C: читання WHO_AM_I з MPU-6050 — wokwi.vcd, декодовано tools/vcd_plot.py')
+ax.grid(axis='x', alpha=.3); plt.tight_layout()
+plt.savefig(os.path.join(outdir, 'logic-i2c-whoami.png'), dpi=120); plt.close()
+
+# --- PWM на D12: 3 періоди + виміряна ширина
+pw = ev['#']
+widths = sorted(set(round((b - a) / 1e3) for (a, va), (b, vb) in zip(pw, pw[1:]) if va == 1))
+periods = [round((c - a) / 1e3) for (a, va), _, (c, vc) in zip(pw, pw[1:], pw[2:]) if va == 1 and vc == 1]
+p0 = pw[len(pw) // 2][0] - 2e6; p1 = p0 + 60e6
+fig, ax = plt.subplots(figsize=(14, 2.8))
+x, y = series('#', p0, p1); ax.plot([v / 1e3 for v in x], y, color='#dc2626')
+ax.set_yticks([0, 1]); ax.set_xlabel('мс'); ax.grid(alpha=.3)
+ax.set_title('D2 = D12 (PA6, TIM3_CH1) PWM на серво pan: період %d мкс, ширини імпульсів у записі: %s мкс'
+             % (max(set(periods), key=periods.count), ', '.join(map(str, widths))))
+plt.tight_layout(); plt.savefig(os.path.join(outdir, 'logic-pwm.png'), dpi=120); plt.close()
+print('PWM widths', widths, 'period', max(set(periods), key=periods.count))
