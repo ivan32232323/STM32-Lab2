@@ -12,7 +12,7 @@
 | Компонент | Інтерфейс | Пін Nucleo (MCU) | AF / канал | Живлення | Ідентифікація | Джерело |
 |---|---|---|---|---|---|---|
 | ST-Link VCP (UART Logger) | UART, 115200 8N1 | PA2 TX, PA3 RX | USART2, AF1 | — | рядок `hello from STM32` | [DS-C031] табл. «Alternate functions», [UM-Nucleo] розд. «Virtual COM port» |
-| **MPU-6050** (GY-521) | **I²C**, 100 кГц (макс. 400 кГц) | D15 = PB8 SCL, D14 = PB9 SDA | I2C1, AF6 | 3.3 В (VDD 2.375–3.46 В) | `WHO_AM_I` (0x75) = **0x68** | [PS-MPU] розд. 6.4, 7.4, 9.2; [RM-MPU] розд. 4.28 |
+| **MPU-6050** (GY-521) | **I²C**, 100 кГц (макс. 400 кГц) | D15 = PB8 SCL, D14 = PB9 SDA | I2C1, AF6 | 3.3 В (VDD 2.375–3.46 В) | `WHO_AM_I` (0x75) = **0x68** | [PS-MPU] с. 15 (I²C address, 100/400 кГц), с. 33–35 (I²C protocol); [RM-MPU] с. 45 (WHO_AM_I) |
 | **Потенціометр** 10 кОм | **ADC**, 12 біт, 0…3.3 В | A0 = PA0 | ADC1_IN0 | 3.3 В | — (аналоговий) | [DS-C031] табл. «Pin definitions», [RM0490] розд. ADC |
 | **Серво SG90/SG92R** ×2 | **PWM** 50 Гц, 1–2 мс | D12 = PA6 (pan), D11 = PA7 (tilt) | TIM3_CH1/CH2, AF1 | **5 В** (4.8–6 В) | — | [SG90] |
 | **Кнопка MODE** | **GPIO** вхід, pull-up | D2 = PA10 | — | — | — | — |
@@ -24,17 +24,17 @@
 ## 2. MPU-6050 — 6-DOF IMU (InvenSense / TDK)
 
 * **Інтерфейс:** I²C slave. 7-бітна адреса `0b110100X`, де X = рівень на піні AD0.
-  AD0 = GND → **0x68**, AD0 = VCC → 0x69 ([PS-MPU] розд. 9.2). У схемі AD0 → GND.
-* **Швидкість:** Standard 100 кГц / Fast 400 кГц ([PS-MPU] розд. 6.4). Беремо 100 кГц,
+  AD0 = GND → **0x68**, AD0 = VCC → 0x69 ([PS-MPU] с. 15, табл. 6.4 «I²C ADDRESS»). У схемі AD0 → GND.
+* **Швидкість:** Standard 100 кГц / Fast 400 кГц ([PS-MPU] с. 15, «I²C Operating Frequency»). Беремо 100 кГц,
   `Timing = 0x20303E5D` @ 48 МГц (значення з CubeMX).
 * **Піни:** VCC, GND, SCL, SDA, XDA/XCL (допоміжна шина, не використовуємо), AD0, INT.
   Плата GY-521 має LDO 3.3 В і підтяжки 4.7 кОм на SCL/SDA.
 * **Регістри для bring-up** ([RM-MPU]):
-  * `0x75 WHO_AM_I` → 0x68 — ідентифікація (розд. 4.32);
-  * `0x6B PWR_MGMT_1` ← 0x00 — вийти зі сну, після reset чип спить (розд. 4.28);
-  * `0x3B…0x40 ACCEL_XOUT_H…ACCEL_ZOUT_L` — сирі дані акселерометра, ±2 g = 16384 LSB/g (розд. 4.17);
+  * `0x75 WHO_AM_I` → 0x68 — ідентифікація ([RM-MPU] с. 45, розд. 4.32);
+  * `0x6B PWR_MGMT_1` ← 0x00 — вийти зі сну, після reset чип спить ([RM-MPU] с. 40, розд. 4.28);
+  * `0x3B…0x40 ACCEL_XOUT_H…ACCEL_ZOUT_L` — сирі дані акселерометра, ±2 g = 16384 LSB/g ([RM-MPU] с. 29, розд. 4.17);
   * `0x43…0x48 GYRO_*` — гіроскоп, ±250 °/с = 131 LSB/(°/с) (розд. 4.19), знадобиться у ЛР2 для fusion.
-* **Живлення:** ~3.9 мА при увімкнених accel + gyro ([PS-MPU] розд. 6.1). Живимо від 3V3 Nucleo,
+* **Живлення:** 3.8 мА (gyro + accel), 3.9 мА з DMP; VDD 2.375–3.46 В ([PS-MPU] с. 14, табл. 6.3). Живимо від 3V3 Nucleo,
   зовнішнє джерело не потрібне.
 * **Навіщо в проєкті:** вимірює нахил кисті оператора (pitch/roll) → FR-01, FR-02.
 
@@ -76,5 +76,4 @@
 * [wokwi-diag] Wokwi, *diagram.json File Format*. https://docs.wokwi.com/diagram-format
 * [Wokwi-LA] Wokwi, *Logic Analyzer*. https://docs.wokwi.com/parts/wokwi-logic-analyzer
 
-> Номери розділів datasheet вказані за наведеними ревізіями. Перед здачею відкрийте PDF і допишіть
-> номер сторінки поруч із кожним розділом (методичка просить посилання на конкретну сторінку).
+> Сторінки вказано за PS-MPU-6000A-00 Rev 3.4 і RM-MPU-6000A-00 Rev 4.2. Вирізки цих сторінок лежать у `docs/datasheets/`.
