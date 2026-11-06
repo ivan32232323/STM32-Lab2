@@ -9,7 +9,7 @@ from docx.oxml import OxmlElement
 
 R = 'https://github.com/ivan32232323/STM32-Lab1'
 C = lambda sha: f'{R}/commit/{sha}'
-STUDENT, GROUP, COURSE, TEACHER = 'Шведенко І.', 'ІО-32', '4', 'Гордієнко Н.Ю.'
+STUDENT, GROUP, COURSE, TEACHER = 'Шведенко Іван Олексійович', 'ІО-32', '4', 'Гордієнко Н.Ю.'
 VIDEO = '[посилання на відео буде додано]'
 
 TITLE = [
