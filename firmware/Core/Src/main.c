@@ -80,18 +80,111 @@ static uint32_t deg_to_us(int deg)
 }
 
 static int mpu_ok = 0;
+static int use_soft_i2c = 0;   /* 1 = апаратний I2C1 не зміг прочитати -> bit-bang */
+
+/* ---------------------------------------------------------------------- */
+/* Програмний I2C (bit-bang) на PB8/PB9 через HAL_GPIO, open-drain.        */
+/* Потрібен лише як обхід: модель I2C STM32C0 у Wokwi не тактує SCL під    */
+/* час читання (див. docs/report.md, проблема 7). На реальному залізі     */
+/* апаратний HAL_I2C працює, і цей код не вмикається.                     */
+/* ---------------------------------------------------------------------- */
+#define SCL_H() HAL_GPIO_WritePin(I2C1_GPIO_Port, I2C1_SCL_Pin, GPIO_PIN_SET)
+#define SCL_L() HAL_GPIO_WritePin(I2C1_GPIO_Port, I2C1_SCL_Pin, GPIO_PIN_RESET)
+/* SDA «відпущено» = вхід з pull-up (лінію тягне вгору резистор або slave
+ * тягне вниз); «0» = вихід, низький рівень. Так читання не залежить від
+ * того, як модель відображає IDR для open-drain виходу. */
+static void sda_mode(uint32_t mode)
+{
+  GPIO_InitTypeDef g = {0};
+  g.Pin = I2C1_SDA_Pin; g.Mode = mode; g.Pull = GPIO_PULLUP; g.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(I2C1_GPIO_Port, &g);
+}
+#define SDA_H() sda_mode(GPIO_MODE_INPUT)
+#define SDA_L() do { HAL_GPIO_WritePin(I2C1_GPIO_Port, I2C1_SDA_Pin, GPIO_PIN_RESET); \
+                     sda_mode(GPIO_MODE_OUTPUT_OD); } while (0)
+#define SDA_R() HAL_GPIO_ReadPin(I2C1_GPIO_Port, I2C1_SDA_Pin)
+
+static void sw_delay(void) { for (volatile int i = 0; i < 40; i++) { } }  /* ~5 мкс */
+
+static void sw_i2c_init(void)
+{
+  GPIO_InitTypeDef g = {0};
+  HAL_I2C_DeInit(&hi2c1);
+  g.Pin   = I2C1_SCL_Pin | I2C1_SDA_Pin;
+  g.Mode  = GPIO_MODE_OUTPUT_OD;
+  g.Pull  = GPIO_PULLUP;
+  g.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(I2C1_GPIO_Port, &g);
+  SDA_H(); SCL_H(); sw_delay();
+}
+static void sw_start(void) { SDA_H(); SCL_H(); sw_delay(); SDA_L(); sw_delay(); SCL_L(); }
+static void sw_stop(void)  { SDA_L(); sw_delay(); SCL_H(); sw_delay(); SDA_H(); sw_delay(); }
+static int sw_write(uint8_t b)          /* повертає 1, якщо ACK */
+{
+  for (int i = 7; i >= 0; i--) {
+    if (b & (1u << i)) SDA_H(); else SDA_L();
+    sw_delay(); SCL_H(); sw_delay(); SCL_L();
+  }
+  SDA_H(); sw_delay(); SCL_H(); sw_delay();
+  int ack = (SDA_R() == GPIO_PIN_RESET);
+  SCL_L();
+  return ack;
+}
+static uint8_t sw_read(int ack)
+{
+  uint8_t b = 0;
+  SDA_H();
+  for (int i = 0; i < 8; i++) {
+    sw_delay(); SCL_H(); sw_delay();
+    b = (uint8_t)((b << 1) | (SDA_R() == GPIO_PIN_SET));
+    SCL_L();
+  }
+  if (ack) SDA_L(); else SDA_H();
+  sw_delay(); SCL_H(); sw_delay(); SCL_L(); SDA_H();
+  return b;
+}
+
+/* Читання регістрів MPU-6050 (register pointer write + repeated start + read) */
+static HAL_StatusTypeDef mpu_read(uint8_t reg, uint8_t *buf, uint16_t n)
+{
+  if (!use_soft_i2c)
+    return HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, reg, I2C_MEMADD_SIZE_8BIT, buf, n, 20);
+  sw_start();
+  if (!sw_write(MPU6050_ADDR) || !sw_write(reg)) { sw_stop(); return HAL_ERROR; }
+  sw_start();
+  if (!sw_write(MPU6050_ADDR | 1u)) { sw_stop(); return HAL_ERROR; }
+  for (uint16_t i = 0; i < n; i++) buf[i] = sw_read(i + 1 < n);
+  sw_stop();
+  return HAL_OK;
+}
+
+static HAL_StatusTypeDef mpu_write(uint8_t reg, uint8_t val)
+{
+  if (!use_soft_i2c)
+    return HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, reg, I2C_MEMADD_SIZE_8BIT, &val, 1, 20);
+  sw_start();
+  int ok = sw_write(MPU6050_ADDR) && sw_write(reg) && sw_write(val);
+  sw_stop();
+  return ok ? HAL_OK : HAL_ERROR;
+}
 
 static void mpu6050_probe(void)
 {
-  uint8_t id = 0, zero = 0;
-  HAL_StatusTypeDef st = HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, MPU6050_WHO_AM_I,
-                                          I2C_MEMADD_SIZE_8BIT, &id, 1, 20);
-  printf("MPU-6050 WHO_AM_I (0x75) = 0x%02X  %s\r\n", id,
+  uint8_t id = 0;
+  HAL_StatusTypeDef st = mpu_read(MPU6050_WHO_AM_I, &id, 1);
+  if (st != HAL_OK || id != 0x68) {
+    printf("HW I2C1 read: st=%d err=0x%lX id=0x%02X -> fallback to bit-bang I2C\r\n",
+           st, HAL_I2C_GetError(&hi2c1), id);
+    use_soft_i2c = 1;
+    sw_i2c_init();
+    st = mpu_read(MPU6050_WHO_AM_I, &id, 1);
+    printf("soft-I2C read: st=%d id=0x%02X\r\n", st, id);
+  }
+  printf("MPU-6050 WHO_AM_I (0x75) = 0x%02X  [%s] %s\r\n", id, use_soft_i2c ? "soft-I2C" : "HAL I2C1",
          (st == HAL_OK && id == 0x68) ? "-> identified" : "-> NOT FOUND");
   if (st == HAL_OK && id == 0x68) {
     /* вивести з режиму сну: PWR_MGMT_1 = 0 */
-    HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, MPU6050_PWR_MGMT_1,
-                      I2C_MEMADD_SIZE_8BIT, &zero, 1, 20);
+    mpu_write(MPU6050_PWR_MGMT_1, 0x00);
     mpu_ok = 1;
   }
 }
@@ -100,8 +193,7 @@ static void mpu6050_probe(void)
 static int mpu6050_angles(int *pitch, int *roll)
 {
   uint8_t b[6];
-  if (!mpu_ok || HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, MPU6050_ACCEL_XOUT,
-                                  I2C_MEMADD_SIZE_8BIT, b, 6, 20) != HAL_OK)
+  if (!mpu_ok || mpu_read(MPU6050_ACCEL_XOUT, b, 6) != HAL_OK)
     return 0;
   float ax = (int16_t)((b[0] << 8) | b[1]);
   float ay = (int16_t)((b[2] << 8) | b[3]);
