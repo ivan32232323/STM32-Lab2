@@ -84,7 +84,13 @@ LD  build/firmware.elf
 
 SYSCLK = 48 MHz. Проєкт з тулчейном Makefile, файл .ioc збережено в репозиторії.
 
-[скриншоти CubeMX]
+Pinout:
+
+![](screenshots/cubemx-pinout.png)
+
+Clock Configuration:
+
+![](screenshots/cubemx-clock.png)
 
 Коміт: https://github.com/ivan32232323/STM32-Lab1/commit/436cd39
 

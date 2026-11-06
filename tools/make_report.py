@@ -80,7 +80,10 @@ tbl([['Периферія', 'Параметри', 'Виводи'],
      ['GPIO', 'кнопка MODE (pull-up), світлодіод LD4', 'PA10 / PA5'],
      ], [3.0, 8.5, 5.0])
 p('SYSCLK = 48 MHz. Проєкт з тулчейном Makefile, файл .ioc збережено в репозиторії.')
-p('[скриншоти CubeMX]')
+p('Pinout:')
+img('docs/screenshots/cubemx-pinout.png', 16.0, '')
+p('Clock Configuration:')
+img('docs/screenshots/cubemx-clock.png', 16.0, '')
 p(f'Коміт: {C("436cd39")}')
 
 h2('3.4. Перший запуск у Wokwi')
