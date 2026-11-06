@@ -71,7 +71,6 @@ TIM3_CH1/CH2 PA6/PA7 → серво pan/tilt (50 Гц, 1–2 мс), PA10 → к�
 | 8 | Документація: `hardware-components.md`, `PRD.md`, цей звіт | `66d72e3, 47c7058, 085538d` |
 
 > Після `git push` зробіть кожен SHA посиланням `https://github.com/<user>/<repo>/commit/<sha>` (`git log --oneline` показує SHA кожного кроку).
-> (`git log --oneline` показує SHA кожного кроку).
 
 ## 3.3. Скриншоти
 
