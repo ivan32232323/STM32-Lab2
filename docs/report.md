@@ -61,16 +61,16 @@ TIM3_CH1/CH2 PA6/PA7 → серво pan/tilt (50 Гц, 1–2 мс), PA10 → к�
 
 | Етап | Що зроблено | Коміт |
 |---|---|---|
-| 1 | Встановлено Git, VS Code, Docker Desktop, GNU Make, плагін Wokwi (`install-tools.bat`) | [abc1234] |
-| 2 | Створено `docker/Dockerfile` і кореневий `Makefile`, зібрано образ `stm32-build` | [abc1234] |
-| 3 | З'ясовано, що Wokwi не підтримує F411/F446; обрано Nucleo-C031C6, завантажено HAL STM32C0 і CMSIS | [abc1234] |
-| 4 | Скелет CubeMX (`firmware.ioc`): USART2, I2C1, ADC1, TIM3 PWM, GPIO. Згенеровано `MX_*_Init()` | [abc1234] |
-| 5 | `_write()` → USART2, перший `hello from STM32`, `tick N` щосекунди | [abc1234] |
-| 6 | I²C-scan + `WHO_AM_I`, PWM на серво, ADC з потенціометра, кнопка режиму | [abc1234] |
-| 7 | `diagram.json`, `wokwi.toml`, перевірка в симуляторі та logic analyzer | [abc1234] |
-| 8 | Документація: `hardware-components.md`, `PRD.md`, цей звіт | [abc1234] |
+| 1 | Встановлено Git, VS Code, Docker Desktop, GNU Make, плагін Wokwi (`install-tools.bat`) | `429a85b` |
+| 2 | Створено `docker/Dockerfile` і кореневий `Makefile`, зібрано образ `stm32-build` | `429a85b` |
+| 3 | З'ясовано, що Wokwi не підтримує F411/F446; обрано Nucleo-C031C6, завантажено HAL STM32C0 і CMSIS | `436cd39` |
+| 4 | Скелет CubeMX (`firmware.ioc`): USART2, I2C1, ADC1, TIM3 PWM, GPIO. Згенеровано `MX_*_Init()` | `436cd39` |
+| 5 | `_write()` → USART2, перший `hello from STM32`, `tick N` щосекунди | `118b3d7` |
+| 6 | I²C-scan + `WHO_AM_I`, PWM на серво, ADC з потенціометра, кнопка режиму | `118b3d7` |
+| 7 | `diagram.json`, `wokwi.toml`, перевірка в симуляторі та logic analyzer | `23d77d3` |
+| 8 | Документація: `hardware-components.md`, `PRD.md`, цей звіт | `66d72e3, 47c7058, 085538d` |
 
-> Після `git push` замініть `[abc1234]` на посилання `https://github.com/<user>/<repo>/commit/<sha>`
+> Після `git push` зробіть кожен SHA посиланням `https://github.com/<user>/<repo>/commit/<sha>` (`git log --oneline` показує SHA кожного кроку).
 > (`git log --oneline` показує SHA кожного кроку).
 
 ## 3.3. Скриншоти
@@ -121,7 +121,7 @@ tick 3 | mode=MIRROR pot=2047 pitch=0 roll=0 pwm1=1500 pwm2=1500
 і Blue Pill ([Wokwi docs](https://docs.wokwi.com/diagram-format)).
 **Рішення.** Ціль — STM32C031C6 (Cortex-M0+, 48 МГц). HAL STM32C0 від ST, `-mcpu=cortex-m0plus` без FPU,
 стартап і лінкер для C031. Піни обрано на роз'ємі Arduino (D11/D12/D14/D15/A0), бо на F411RE вони мають ті
-самі функції. Перехід на залізо = перегенерація в CubeMX. Коміт: [abc1234].
+самі функції. Перехід на залізо = перегенерація в CubeMX. Коміти: `436cd39`, `23d77d3`.
 
 ### Проблема 2: `fatal error: m-profile/cmsis_gcc_m.h: No such file or directory`
 **Симптом.** Перша збірка падає на кожному `.c` у `cmsis_gcc.h:1011`.
@@ -129,13 +129,13 @@ tick 3 | mode=MIRROR pot=2047 pitch=0 roll=0 pwm1=1500 pwm2=1500
 з плоскою структурою `Include/`.
 **Рішення.** Узято `Drivers/CMSIS/Include` (CMSIS 5) з офіційного прикладу `wokwi/stm32-hello-wokwi`,
 який генерує CubeMX для C031. Урок: версію CMSIS треба брати з того самого STM32Cube FW-пакета, що й HAL.
-Коміт: [abc1234].
+Коміт: `436cd39`.
 
 ### Проблема 3: `implicit declaration of function 'HAL_TIM_MspPostInit'`
 **Симптом.** Попередження компілятора в `MX_TIM3_Init()`.
 **Причина.** CubeMX оголошує цю функцію в `main.h`, а при ручному перенесенні оголошення загубилося. Без
 прототипу C підставляє `int f()`. Це спрацювало б, але так ховаються помилки сигнатур.
-**Рішення.** Додано прототип у `Core/Inc/main.h`; збірка без попереджень (`-Wall`). Коміт: [abc1234].
+**Рішення.** Додано прототип у `Core/Inc/main.h`; збірка без попереджень (`-Wall`). Коміт: `118b3d7`.
 
 ### Проблема 4: на Windows немає `make`, а прапорець `--user $(id -u)` ламає `docker run`
 **Симптом.** `make build` з методички не працює в PowerShell: немає `make`, `id` не існує, Docker отримує
@@ -143,13 +143,13 @@ tick 3 | mode=MIRROR pot=2047 pitch=0 roll=0 pwm1=1500 pwm2=1500
 **Причина.** Прапорець `--user` потрібен лише на Linux, де bind-mount зберігає UID. Docker Desktop на
 Windows сам мапить права через WSL2.
 **Рішення.** У кореневому `Makefile` гілка `ifeq ($(OS),Windows_NT)` не додає `--user`. GNU Make
-ставиться через winget. Окремо додано `build.bat`, який робить те саме без make. Коміт: [abc1234].
+ставиться через winget. Окремо додано `build.bat`, який робить те саме без make. Коміт: `429a85b`.
 
 ### Проблема 5: збірка не побайтно відтворювана між машинами
 **Симптом.** `firmware.elf`, зібраний у різних каталогах, має різний MD5.
 **Причина.** `-g` вшиває в DWARF абсолютний шлях до сорсів.
 **Рішення.** Додано `-ffile-prefix-map=$(CURDIR)=.`. Дві чисті збірки поспіль дали однаковий MD5 `firmware.bin`.
-Docker-образ гарантує ту саму версію GCC на будь-якій машині. Коміт: [abc1234].
+Docker-образ гарантує ту саму версію GCC на будь-якій машині. Коміт: `118b3d7`.
 
 ### Проблема 6: 32 КБ flash — `printf` + `atan2f` на Cortex-M0+ без FPU
 **Симптом.** Перша збірка займала 27 КБ з 32 КБ. Додавання `printf("%f")` переповнило б flash.
@@ -157,7 +157,7 @@ Docker-образ гарантує ту саму версію GCC на будь-
 `printf` з float займає ~15 КБ.
 **Рішення.** `-specs=nano.specs` (newlib-nano), `--gc-sections`, кути виводяться цілими числами.
 Підсумок — 24.5 КБ. Для ЛР2 (Mahony-фільтр) розглянути фіксовану кому або перехід на F446RE з FPU.
-Коміт: [abc1234].
+Коміт: `118b3d7`.
 
 # 4. Висновок
 
