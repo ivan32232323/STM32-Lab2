@@ -1,0 +1,25 @@
+../../test_mpu6050.c:124:test_read_id_ok:PASS
+../../test_mpu6050.c:125:test_init_wakes_and_configures:PASS
+../../test_mpu6050.c:126:test_init_unexpected_id:PASS
+../../test_mpu6050.c:127:test_init_nack_wrong_address:PASS
+../../test_mpu6050.c:128:test_init_timeout_midway:PASS
+../../test_mpu6050.c:129:test_read_raw_propagates_error:PASS
+../../test_mpu6050.c:130:test_parse_big_endian_signed:PASS
+../../test_mpu6050.c:87:test_temperature_formula_datasheet:FAIL: Expected 2400 Was 2401
+../../test_mpu6050.c:132:test_convert_sensitivity:PASS
+../../test_mpu6050.c:133:test_la_vectors_match_uart:PASS
+
+-----------------------
+10 Tests 1 Failures 0 Ignored 
+FAIL
+../../test_selftest.c:145:test_format_line:PASS
+../../test_selftest.c:146:test_plausibility_criteria:PASS
+../../test_selftest.c:89:test_full_pass_with_hw_i2c:FAIL: Expected Non-NULL
+../../test_selftest.c:148:test_hw_i2c_timeout_falls_back_to_sw:PASS
+../../test_selftest.c:149:test_no_devices_reports_fail_without_hang:PASS
+../../test_selftest.c:150:test_servo_ccr_mismatch_detected:PASS
+../../test_selftest.c:151:test_every_line_is_parseable:PASS
+
+-----------------------
+7 Tests 1 Failures 0 Ignored 
+FAIL
