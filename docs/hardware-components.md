@@ -1,4 +1,4 @@
-# Апаратні компоненти (ЛР1, форма B — Wokwi)
+# Апаратні компоненти (ЛР1 → актуалізовано в ЛР2, форма B — Wokwi)
 
 Платформа: **Nucleo-C031C6** (MCU STM32C031C6T6, Cortex-M0+, 48 МГц, 32 КБ Flash, 12 КБ RAM).
 
@@ -17,9 +17,13 @@
 | **Серво SG90/SG92R** ×2 | **PWM** 50 Гц, 1–2 мс | D12 = PA6 (pan), D11 = PA7 (tilt) | TIM3_CH1/CH2, AF1 | **5 В** (4.8–6 В) | — | [SG90] |
 | **Кнопка MODE** | **GPIO** вхід, pull-up | D2 = PA10 | — | — | — | — |
 | Світлодіод LD4 | GPIO вихід | D13 = PA5 | — | — | — | [UM-Nucleo] |
+| **W25Q64JV** SPI NOR flash 8 МБ (ЛР2) | **SPI** mode 0, 3 МГц | D3 = PB3 SCK, D5 = PB4 MISO, D6 = PB5 MOSI, D4 = PB10 CS# | SPI1, AF0; CS# — GPIO | 3.3 В (2.7–3.6 В) | JEDEC ID (9Fh) = **EF 40 17** | W25Q64JV datasheet: Instruction Set Table, DC/AC Characteristics |
+| Службові проби LA (ЛР2) | GPIO out | D10 = PB0 (ADC), D8 = PA9 (контур) | — | — | — | docs/pinout.md |
 | Logic Analyzer (Wokwi) | sniff D0–D3 | D15, D14, D12, PA2 | — | — | — | [Wokwi-LA] |
 
-Мінімум за методичкою: 3 компоненти з різними інтерфейсами. Тут їх **чотири: I²C, ADC, PWM і GPIO**, плюс UART як канал логів.
+Мінімум за методичкою: 3 компоненти з різними інтерфейсами. Тут їх **п'ять: I²C, SPI, ADC, PWM і GPIO**, плюс UART як канал логів.
+
+> ЛР2: повна pinout-таблиця з AF, роз'ємами, бюджетом живлення і відхиленими варіантами — `docs/pinout.md`.
 
 ## 2. MPU-6050 — 6-DOF IMU (InvenSense / TDK)
 
@@ -64,6 +68,16 @@
 
 `HAL_I2C_IsDeviceReady()` для адрес 0x08…0x77 (I²C-scan) знаходить пристрій **0x68**. У Wokwi Logic Analyzer
 на D0 (SCL) видно тактові імпульси 100 кГц, на D2 — PWM 50 Гц зі шпаруватістю 1–2 мс.
+
+## 7. W25Q64JV — SPI NOR flash (ЛР2, FR-11)
+
+* **Інтерфейс:** SPI mode 0/3, у проєкті mode 0, 3 МГц (SPI1 /16), CS# програмний на PB10 (D4).
+* **Інструкції драйвера** (`firmware/Devices/w25q.c`): 9Fh JEDEC ID, 05h Read SR1 (BUSY, WEL), 06h Write Enable,
+  20h Sector Erase 4 КБ, 02h Page Program (≤ 256 Б, у межах сторінки), 03h Read Data.
+* **Таймінги:** tPP ≤ 3 мс, tSE ≤ 400 мс (типово 0.4 мс / 45 мс).
+* **Живлення:** ~4 мА читання, до 25 мА програмування/стирання, ~1 мкА standby.
+* **У Wokwi** такої частини немає — використано власну модель `chips/w25q64.chip.c` (256 КБ, ті самі інструкції й BUSY).
+* **Навіщо:** запис траєкторії RECORD/PLAYBACK (FR-11, ЛР3).
 
 ## Джерела
 
