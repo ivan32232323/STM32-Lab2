@@ -33,12 +33,20 @@ extern "C" {
 /**
   * @brief This is the list of modules to be used in the HAL driver
   */
+/* ЛР2: увімкнено лише потрібні модулі (обгрунтування — docs/architecture.md §4):
+ *  ADC    — потенціометр PA0 (ADC1_IN0)
+ *  CORTEX — SysTick / NVIC (HAL_Init)
+ *  DMA    — типи DMA_HandleTypeDef у хендлах UART/I2C/SPI (сам DMA не використовується)
+ *  FLASH  — затримка flash (FLASH_LATENCY_1) у HAL_RCC_ClockConfig
+ *  GPIO   — усі піни; I2C — MPU-6050; PWR — HAL_MspInit (PWR clock)
+ *  RCC    — дерево тактування; SPI — W25Q64; TIM — PWM серво; UART — VCP
+ *  EXTI вимкнено у ЛР2: кнопка опитується в головному циклі. */
 #define HAL_MODULE_ENABLED
 #define HAL_ADC_MODULE_ENABLED
 #define HAL_CORTEX_MODULE_ENABLED
 /* #define HAL_CRC_MODULE_ENABLED */
 #define HAL_DMA_MODULE_ENABLED
-#define HAL_EXTI_MODULE_ENABLED
+/* #define HAL_EXTI_MODULE_ENABLED */
 /* #define HAL_FDCAN_MODULE_ENABLED */
 #define HAL_FLASH_MODULE_ENABLED
 #define HAL_GPIO_MODULE_ENABLED
@@ -53,7 +61,7 @@ extern "C" {
 /* #define HAL_RTC_MODULE_ENABLED */
 /* #define HAL_SMARTCARD_MODULE_ENABLED */
 /* #define HAL_SMBUS_MODULE_ENABLED */
-/* #define HAL_SPI_MODULE_ENABLED */
+#define HAL_SPI_MODULE_ENABLED
 #define HAL_TIM_MODULE_ENABLED
 #define HAL_UART_MODULE_ENABLED
 /* #define HAL_USART_MODULE_ENABLED */
