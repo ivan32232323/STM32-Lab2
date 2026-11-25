@@ -13,7 +13,7 @@ from docx.shared import Cm, Pt
 
 REPO = 'https://github.com/ivan32232323/STM32-Lab2'
 STUDENT, GROUP, COURSE, TEACHER = 'Шведенко Іван Олексійович', 'ІО-32', '4', 'Гордієнко Н.Ю.'
-VIDEO = '[посилання на відео буде додано]'
+VIDEO = 'https://drive.google.com/file/d/1WGseqAj6XfJlsJEBB2kJuO001eRFltR2/view?usp=sharing'
 # ключ -> короткий хеш коміту (заповнити після push; None -> «коміт: див. файл ...»)
 COMMITS = {
     'pinout': '890696a', 'timing': '890696a',

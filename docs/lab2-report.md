@@ -37,7 +37,7 @@ title: "Лабораторна робота №2"
 
 Репозиторій: https://github.com/ivan32232323/STM32-Lab2
 
-Відео: [посилання на відео буде додано]
+Відео: https://drive.google.com/file/d/1WGseqAj6XfJlsJEBB2kJuO001eRFltR2/view?usp=sharing
 
 # 1. Розподіл задач
 
