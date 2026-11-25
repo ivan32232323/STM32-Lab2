@@ -10,3 +10,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 wokwi.vcd
+__pycache__/
+*.gcda
+*.gcno

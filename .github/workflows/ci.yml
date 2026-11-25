@@ -1,0 +1,38 @@
+# CI ЛР2: на кожен pull request (і push у main/lab*) — збірка прошивки,
+# перевірка шарів/pinout, хостові тести з покриттям. Усе в тому самому
+# Docker-образі, що й локально (make image / make ci).
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main, 'lab*']
+
+jobs:
+  build-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain image
+        run: make image
+
+      - name: Build firmware (-Wall -Wextra -Werror)
+        run: make build
+
+      - name: Layer dependencies and pinout consistency
+        run: make check
+
+      - name: Host tests + coverage (Devices/, App/ >= 90 % lines)
+        run: make coverage
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-and-coverage
+          path: |
+            firmware/build/firmware.elf
+            firmware/build/firmware.hex
+            firmware/build/firmware.map
+            tests/build/coverage*.html
