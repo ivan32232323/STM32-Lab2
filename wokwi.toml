@@ -1,6 +1,13 @@
 # Wokwi for VS Code: F1 -> "Wokwi: Start Simulator"
+# Запис логічного аналізатора зберігається при зупинці симуляції у vcdFile.
 [wokwi]
 version = 1
 firmware = 'firmware/build/firmware.hex'
 elf = 'firmware/build/firmware.elf'
 gdbServerPort = 3333
+vcdFile = 'wokwi.vcd'
+
+# Модель SPI-flash W25Q64 (у бібліотеці Wokwi її немає) — chips/w25q64.chip.c
+[[chip]]
+name = 'w25q64'
+binary = 'chips/w25q64.chip.wasm'
