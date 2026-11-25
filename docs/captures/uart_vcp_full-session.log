@@ -1,0 +1,44 @@
+
+=== LR2 Motion-Mirroring Teleoperator ===
+ST;BEGIN;lab2;INFO;sysclk=48000000;fmt=v1
+ST;I2C1;hw_read;WARN;timeout err=0x20 id=0x00;HAL_I2C_Mem_Read ok
+ST;I2C1;bus;INFO;soft-i2c;fallback
+ST;MPU6050;who_am_i;PASS;0x68;0x68
+ST;MPU6050;init;PASS;ok;ok
+ST;MPU6050;burst14;PASS;ok;ok
+ST;MPU6050;accel_mg;INFO;-500,0,865;
+ST;MPU6050;accel_norm_mg;PASS;999;1000+-5%
+ST;MPU6050;temp_c;PASS;24.00;15..35
+ST;MPU6050;gyro_mdps;PASS;0,0,0;|w|<5dps
+ST;W25Q64;jedec_id;PASS;0xEF4017;0xEF4017
+ST;W25Q64;sector_erase;PASS;ok;ok
+ST;W25Q64;blank_check;PASS;all_FF;all_FF
+ST;W25Q64;page_program;PASS;ok;ok
+ST;W25Q64;readback;PASS;0/16_diff;0_diff
+ST;POT;adc_two_reads;PASS;2050,2050;|d|<=8LSB
+ST;SERVO_PAN;ccr_1000;PASS;1000;1000us
+ST;SERVO_PAN;ccr_2000;PASS;2000;2000us
+ST;BTN;idle_level;PASS;released;released
+ST;SUMMARY;all;PASS;pass=15 fail=0 warn=1;
+CAPTURE;begin
+CAP;i2c;id=0x68;st=0,0;raw=-8192,0,14188,-4260,0,0,0
+CAP;nack;addr=0x69;st=-1
+CAP;spi;jedec=0xEF4017;sr1=0x00;st=0,0,0,0,0;rd=LR2-SPI!
+CAP;adc;0;2050
+CAP;adc;1;2050
+CAP;adc;2;2050
+CAP;adc;3;2050
+CAP;adc;4;2050
+CAP;adc;5;2050
+CAP;adc;6;2050
+CAP;adc;7;2050
+CAP;adc;8;2050
+CAP;adc;9;2050
+CAPTURE;end
+type 'help' for capture commands
+TEL;1;mode=MANUAL;pot=2050;pitch=0;roll=0;pwm1=1501;pwm2=1500;imu=ok
+TEL;2;mode=MANUAL;pot=2050;pitch=0;roll=0;pwm1=1501;pwm2=1500;imu=ok
+TEL;3;mode=MANUAL;pot=2050;pitch=0;roll=0;pwm1=1501;pwm2=1500;imu=ok
+TEL;4;mode=MANUAL;pot=2050;pitch=0;roll=0;pwm1=1501;pwm2=1500;imu=ok
+TEL;5;mode=MANUAL;pot=2050;pitch=0;roll=0;pwm1=1501;pwm2=1500;imu=ok
+TEL;6;mode=MANUAL;pot=2050;pitch=0;roll=0;pwm1=1501;pwm2=1500;imu=ok
