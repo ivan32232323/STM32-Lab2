@@ -16,8 +16,10 @@ STUDENT, GROUP, COURSE, TEACHER = 'Шведенко Іван Олексійов�
 VIDEO = '[посилання на відео буде додано]'
 # ключ -> короткий хеш коміту (заповнити після push; None -> «коміт: див. файл ...»)
 COMMITS = {
-    'pinout': None, 'chip': None, 'layers': None, 'size': None, 'binutils': None, 'spi': None,
-    'softi2c': None, 'temp': None, 'timing': None, 'tests': None, 'ci': None, 'captures': None,
+    'pinout': '890696a', 'timing': '890696a',
+    'layers': 'a801bed', 'spi': 'a801bed', 'softi2c': 'a801bed', 'temp': 'a801bed',
+    'size': '855d672', 'binutils': '855d672', 'chip': '5b92333', 'tests': '0521f69',
+    'ci': 'c16411d', 'captures': '152e091',
 }
 
 M = json.load(open('docs/captures/measurements.json'))

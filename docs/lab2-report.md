@@ -359,57 +359,57 @@ make test збирає тести звичайним gcc (без плати і �
 **Проблема 1: стандартний SPI Arduino зайнятий**  
 Симптом: D13/D12/D11 (PA5/PA6/PA7) — це SPI1 Arduino, але на них LD4 і серво TIM3 з ЛР1.  
 Root cause / фікс: перебір AF у базі CubeMX: друга повна трійка SPI1 на Arduino — PB3/PB4/PB5 (D3/D5/D6, AF0); CS# — PB10 (без AF).  
-Коміт: файли: docs/pinout.md, firmware/Platform/board.h, firmware.ioc
+Коміт: https://github.com/ivan32232323/STM32-Lab2/commit/890696a
 
 **Проблема 2: у Wokwi немає SPI-flash**  
 Симптом: у бібліотеці частин Wokwi відсутня W25Q64 — SPI нема з ким перевірити.  
 Root cause / фікс: власна модель на Custom Chips API (chips/w25q64.chip.c → wasm, clang). Перша збірка важила 264 КБ: з --import-memory lld записує .bss (256 КБ масив) як нулі в DATA. Пам'ять взято через memory.grow під час init → 2.7 КБ.  
-Коміт: файли: chips/w25q64.chip.c, chips/Makefile, wokwi.toml
+Коміт: https://github.com/ivan32232323/STM32-Lab2/commit/5b92333
 
 **Проблема 3: прошивка не влазить у flash**  
 Симптом: з -Og і новими драйверами — 30.8 КБ з 32 КБ (94 %); з -flto лінкер: undefined reference to _sbrk.  
 Root cause / фікс: root cause: newlib викликає _sbrk з libc.a, яку LTO не бачить, і LTO викидає функцію. Фікс: -Os -flto, а syscalls.c/sysmem.c — з -fno-lto. Результат 26.9 КБ (81 %).  
-Коміт: файли: firmware/Makefile (OPT, NO_LTO_OBJ)
+Коміт: https://github.com/ivan32232323/STM32-Lab2/commit/855d672
 
 **Проблема 4: ld: unrecognized option --no-warn-rwx-segments**  
 Симптом: binutils 2.38 (ubuntu 22.04, той самий, що в Docker) не знає ключа з binutils 2.39.  
 Root cause / фікс: ключ додається лише якщо `ld --help` його містить (LD_RWX у Makefile).  
-Коміт: файли: firmware/Makefile
+Коміт: https://github.com/ivan32232323/STM32-Lab2/commit/855d672
 
 **Проблема 5: паузи ~60 мкс між байтами SPI**  
 Симптом: на LA байт триває 2.4 мкс, а між байтами 56–115 мкс (медіана 60) — ефективно 16 КБ/с замість 375 КБ/с.  
 Root cause / фікс: spi_transfer() викликав HAL_SPI_TransmitReceive на кожен байт. Один виклик на буфер (Transmit / TransmitReceive in-place з 0xFF) → медіана 4.6 мкс.  
-Коміт: файли: firmware/Platform/platform.c: spi_transfer()
+Коміт: https://github.com/ivan32232323/STM32-Lab2/commit/a801bed
 
 **Проблема 6: bit-bang I²C 14 кГц замість 100**  
 Симптом: LA: T_SCL = 71 мкс.  
 Root cause / фікс: затримка SW_HALF_LOOPS = 18 підбиралась «на око»; фактично цикл у моделі ~1.9 мкс на ітерацію. Підібрано за LA: SW_HALF_LOOPS = 1 → 11.5 мкс (87 кГц) ≤ 100 кГц.  
-Коміт: файли: firmware/Platform/platform.c
+Коміт: https://github.com/ivan32232323/STM32-Lab2/commit/a801bed
 
 **Проблема 7: температура 24.01 °C замість 24.00**  
 Симптом: тест з прикладом datasheet падає: Expected 2400 Was 2401.  
 Root cause / фікс: ціле ділення відкидає дріб у бік нуля; округлення до найближчого (±170 перед /340).  
-Коміт: файли: firmware/Devices/mpu6050.c: mpu6050_temp_cdeg()
+Коміт: https://github.com/ivan32232323/STM32-Lab2/commit/a801bed
 
 **Проблема 8: TIMINGR у коді і в .ioc розійшлися**  
 Симптом: у main.c ЛР1 0x20303E5D, у .ioc — 0x10805D88; ручна правка .ioc не діє — CubeMX перераховує TIMINGR, поки Custom Timing = Disabled.  
 Root cause / фікс: взято значення CubeMX (t_r = t_f = 100 нс) в board.h — одне джерело; на LA T_SCL = 10.0 мкс в обох випадках.  
-Коміт: файли: firmware/Platform/board.h, firmware.ioc
+Коміт: https://github.com/ivan32232323/STM32-Lab2/commit/890696a
 
 **Проблема 9: тести не перезбирались після зміни драйвера; gcov «overwriting profile data»**  
 Симптом: make test показував старий FAIL; gcov сварився на .gcda від попередньої збірки.  
 Root cause / фікс: залежності тестів від SRC_<тест> через .SECONDEXPANSION; перед прогоном видаляються *.gcda.  
-Коміт: файли: tests/Makefile
+Коміт: https://github.com/ivan32232323/STM32-Lab2/commit/0521f69
 
 **Проблема 10: покриття 0 % у Docker при зелених тестах**  
 Симптом: make ci у контейнері: усі 36 тестів PASS, але gcovr показує 0 з 323 рядків.  
 Root cause / фікс: у tests/build лишилися бінарники, зібрані у VM: gcc вшиває в них абсолютний шлях для .gcda, тож у контейнері лічильники писались у неіснуючий каталог, а make вважав бінарники актуальними. make coverage тепер спершу виконує make -C tests clean.  
-Коміт: файли: Makefile (ціль coverage)
+Коміт: https://github.com/ivan32232323/STM32-Lab2/commit/c16411d
 
 **Проблема 11: запис LA без початку сесії**  
 Симптом: у raw-profileA-boot-v2.vcd перший фронт UART на 33 мс замість 0.9 мс.  
 Root cause / фікс: Wokwi for VS Code перезапускає симуляцію при зміні firmware.hex (перезбирання під час роботи). Фінальні записи зроблено «з нуля»: зупинка → ▶ → ■ без перезбирань між ними; повнота перевіряється (перший рядок UART на 0.89 мс).  
-Коміт: файли: docs/captures/README.md
+Коміт: https://github.com/ivan32232323/STM32-Lab2/commit/152e091
 
 # 9. Внесок учасників
 
