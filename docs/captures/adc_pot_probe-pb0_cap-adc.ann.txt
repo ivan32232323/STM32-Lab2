@@ -1,0 +1,193 @@
+# adc_pot_probe-pb0_cap-adc: sigrok-cli -I vcd:downsample=100 -P uart:rx=UART_TX:baudrate=115200 -A uart=rx-data
+# частота дискретизації після downsample: 10 МГц (100 нс/відлік)
+  2495.600 us  uart-1: 43
+  2588.500 us  uart-1: 41
+  2681.400 us  uart-1: 50
+  2774.300 us  uart-1: 3B
+  2867.200 us  uart-1: 61
+  2960.100 us  uart-1: 64
+  3054.200 us  uart-1: 63
+  3147.100 us  uart-1: 3B
+  3240.000 us  uart-1: 31
+  3332.900 us  uart-1: 3B
+  3425.800 us  uart-1: 32
+  3518.700 us  uart-1: 30
+  3611.600 us  uart-1: 35
+  3704.500 us  uart-1: 30
+  3797.400 us  uart-1: 0D
+  3890.300 us  uart-1: 0A
+ 14495.300 us  uart-1: 43
+ 14588.200 us  uart-1: 41
+ 14681.100 us  uart-1: 50
+ 14774.000 us  uart-1: 3B
+ 14866.900 us  uart-1: 61
+ 14959.800 us  uart-1: 64
+ 15054.000 us  uart-1: 63
+ 15146.900 us  uart-1: 3B
+ 15239.800 us  uart-1: 32
+ 15332.700 us  uart-1: 3B
+ 15425.600 us  uart-1: 32
+ 15518.500 us  uart-1: 30
+ 15611.400 us  uart-1: 35
+ 15704.300 us  uart-1: 30
+ 15797.200 us  uart-1: 0D
+ 15890.100 us  uart-1: 0A
+ 26495.100 us  uart-1: 43
+ 26588.000 us  uart-1: 41
+ 26680.900 us  uart-1: 50
+ 26773.800 us  uart-1: 3B
+ 26866.700 us  uart-1: 61
+ 26959.600 us  uart-1: 64
+ 27053.700 us  uart-1: 63
+ 27146.600 us  uart-1: 3B
+ 27239.500 us  uart-1: 33
+ 27332.400 us  uart-1: 3B
+ 27425.300 us  uart-1: 32
+ 27518.200 us  uart-1: 30
+ 27611.100 us  uart-1: 35
+ 27704.000 us  uart-1: 30
+ 27796.900 us  uart-1: 0D
+ 27889.800 us  uart-1: 0A
+ 38495.300 us  uart-1: 43
+ 38588.200 us  uart-1: 41
+ 38681.100 us  uart-1: 50
+ 38774.000 us  uart-1: 3B
+ 38866.900 us  uart-1: 61
+ 38959.800 us  uart-1: 64
+ 39054.000 us  uart-1: 63
+ 39146.900 us  uart-1: 3B
+ 39239.800 us  uart-1: 34
+ 39332.700 us  uart-1: 3B
+ 39425.600 us  uart-1: 32
+ 39518.500 us  uart-1: 30
+ 39611.400 us  uart-1: 35
+ 39704.300 us  uart-1: 30
+ 39797.200 us  uart-1: 0D
+ 39890.100 us  uart-1: 0A
+ 50495.100 us  uart-1: 43
+ 50588.000 us  uart-1: 41
+ 50680.900 us  uart-1: 50
+ 50773.800 us  uart-1: 3B
+ 50866.700 us  uart-1: 61
+ 50959.600 us  uart-1: 64
+ 51053.700 us  uart-1: 63
+ 51146.600 us  uart-1: 3B
+ 51239.500 us  uart-1: 35
+ 51332.400 us  uart-1: 3B
+ 51425.300 us  uart-1: 32
+ 51518.200 us  uart-1: 30
+ 51611.100 us  uart-1: 35
+ 51704.000 us  uart-1: 30
+ 51796.900 us  uart-1: 0D
+ 51889.800 us  uart-1: 0A
+ 62494.300 us  uart-1: 43
+ 62587.200 us  uart-1: 41
+ 62680.100 us  uart-1: 50
+ 62773.000 us  uart-1: 3B
+ 62865.900 us  uart-1: 61
+ 62958.800 us  uart-1: 64
+ 63053.000 us  uart-1: 63
+ 63145.900 us  uart-1: 3B
+ 63238.800 us  uart-1: 36
+ 63331.700 us  uart-1: 3B
+ 63424.600 us  uart-1: 32
+ 63517.500 us  uart-1: 30
+ 63610.400 us  uart-1: 35
+ 63703.300 us  uart-1: 30
+ 63796.200 us  uart-1: 0D
+ 63889.100 us  uart-1: 0A
+ 74494.300 us  uart-1: 43
+ 74587.200 us  uart-1: 41
+ 74680.100 us  uart-1: 50
+ 74773.000 us  uart-1: 3B
+ 74865.900 us  uart-1: 61
+ 74958.800 us  uart-1: 64
+ 75053.000 us  uart-1: 63
+ 75145.900 us  uart-1: 3B
+ 75238.800 us  uart-1: 37
+ 75331.700 us  uart-1: 3B
+ 75424.600 us  uart-1: 32
+ 75517.500 us  uart-1: 30
+ 75610.400 us  uart-1: 35
+ 75703.300 us  uart-1: 30
+ 75796.200 us  uart-1: 0D
+ 75889.100 us  uart-1: 0A
+ 86494.100 us  uart-1: 43
+ 86587.000 us  uart-1: 41
+ 86679.900 us  uart-1: 50
+ 86772.800 us  uart-1: 3B
+ 86865.700 us  uart-1: 61
+ 86958.600 us  uart-1: 64
+ 87052.700 us  uart-1: 63
+ 87145.600 us  uart-1: 3B
+ 87238.500 us  uart-1: 38
+ 87331.400 us  uart-1: 3B
+ 87424.300 us  uart-1: 32
+ 87517.200 us  uart-1: 30
+ 87610.100 us  uart-1: 35
+ 87703.000 us  uart-1: 30
+ 87795.900 us  uart-1: 0D
+ 87888.800 us  uart-1: 0A
+ 98494.300 us  uart-1: 43
+ 98587.200 us  uart-1: 41
+ 98680.100 us  uart-1: 50
+ 98773.000 us  uart-1: 3B
+ 98865.900 us  uart-1: 61
+ 98958.800 us  uart-1: 64
+ 99053.000 us  uart-1: 63
+ 99145.900 us  uart-1: 3B
+ 99238.800 us  uart-1: 39
+ 99331.700 us  uart-1: 3B
+ 99424.600 us  uart-1: 32
+ 99517.500 us  uart-1: 30
+ 99610.400 us  uart-1: 35
+ 99703.300 us  uart-1: 30
+ 99796.200 us  uart-1: 0D
+ 99889.100 us  uart-1: 0A
+110105.400 us  uart-1: 43
+110198.300 us  uart-1: 41
+110291.200 us  uart-1: 50
+110384.100 us  uart-1: 54
+110477.000 us  uart-1: 55
+110569.900 us  uart-1: 52
+110662.800 us  uart-1: 45
+110755.700 us  uart-1: 3B
+110848.600 us  uart-1: 65
+110941.500 us  uart-1: 6E
+111035.700 us  uart-1: 64
+111128.600 us  uart-1: 0D
+111221.500 us  uart-1: 0A
+111314.400 us  uart-1: 74
+111407.300 us  uart-1: 79
+111500.200 us  uart-1: 70
+111593.100 us  uart-1: 65
+111686.000 us  uart-1: 20
+111778.900 us  uart-1: 27
+111871.800 us  uart-1: 68
+111964.700 us  uart-1: 65
+112058.600 us  uart-1: 6C
+112151.500 us  uart-1: 70
+112244.400 us  uart-1: 27
+112337.300 us  uart-1: 20
+112430.200 us  uart-1: 66
+112523.100 us  uart-1: 6F
+112616.000 us  uart-1: 72
+112708.900 us  uart-1: 20
+112801.800 us  uart-1: 63
+112894.700 us  uart-1: 61
+112987.600 us  uart-1: 70
+113081.700 us  uart-1: 74
+113174.600 us  uart-1: 75
+113267.500 us  uart-1: 72
+113360.200 us  uart-1: 65
+113453.100 us  uart-1: 20
+113546.000 us  uart-1: 63
+113638.900 us  uart-1: 6F
+113731.800 us  uart-1: 6D
+113824.700 us  uart-1: 6D
+113917.600 us  uart-1: 61
+114010.500 us  uart-1: 6E
+114104.600 us  uart-1: 64
+114197.500 us  uart-1: 73
+114290.400 us  uart-1: 0D
+114383.300 us  uart-1: 0A

@@ -1,0 +1,9 @@
+# pwm_servo-pan_1000us-2000us: sigrok-cli -I vcd:downsample=1000 -P pwm:data=PWM_PAN -A pwm=duty-cycle
+# частота дискретизації після downsample: 1 МГц (1000 нс/відлік)
+  5020.000 us  pwm-1: 7.500000%
+ 25020.000 us  pwm-1: 5.000000%
+ 45020.000 us  pwm-1: 5.000000%
+ 65020.000 us  pwm-1: 5.000000%
+ 85020.000 us  pwm-1: 10.000000%
+105020.000 us  pwm-1: 10.000000%
+125020.000 us  pwm-1: 10.000000%
